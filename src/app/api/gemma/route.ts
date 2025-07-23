@@ -4,7 +4,7 @@ export async function POST(request:NextRequest)
 {
     const body = await request.json(); // Extracting JSON body from the request
     const prompt = body.prompt;
-    
+
     console.log(prompt); // Logging the prompt for debugging
 
     const response = await fetch("http://localhost:11434/api/generate", {
@@ -15,7 +15,8 @@ export async function POST(request:NextRequest)
         body: JSON.stringify({
             model:"gemma:latest", // Specifying the model to use
             prompt,
-            stream:false, // Setting stream to false to get the full response at once
+            stream:false, 
+            temperature:0.1,// Setting stream to false to get the full response at once
         }),
          // Stringifying the prompt to send as the request body
     });

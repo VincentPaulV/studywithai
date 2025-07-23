@@ -1,65 +1,70 @@
-'use client' // This file is a client-side component in a Next.js application
+'use client'
 
-import React, { useState } from 'react'; // Importing useState hook from React
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UploadIcon, Loader2Icon } from "lucide-react";
 
-export default function FileUpload({onUpload}:{onUpload?: () => void}){
-    const [file, setFile] = useState<File | null>(null); // State to hold the uploaded file
-    const [uploading, setUploading] = useState(false); // State to manage uploading state
+export default function FileUpload({ onUpload }: { onUpload?: () => void }) {
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0])
-        {
-            setFile(e.target.files[0]); // Setting the file state with the selected file
-        }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!files.length) return;
+
+    setUploading(true);
+
+    const formData = new FormData();
+    files.forEach(file => formData.append('file', file));
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (res.ok && onUpload) {
+      onUpload();
     }
 
-    const handleUpload = async () => {
-        if (!file) return;
+    setUploading(false);
+    setFiles([]);
+  };
 
-        setUploading(true);
-
-        const formData = new FormData(); // Creating a new FormData object to hold the file
-        formData.append('file', file); // Appending the file to the FormData object
-
-        const res = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-        }); // Sending the file to the server via a POST request
-
-        if (res.ok && onUpload) {
-            onUpload();
-        } // If the upload is successful, call the onUpload callback if provided
-
-        setUploading(false);
-    }
-
-    return (
-        <div className="space-y-4 rounded-xl border p-4 shadow-md max-w-md mx-auto">
+  return (
+    <div className="space-y-4 rounded-xl border border-[#444857] bg-[#23272f] p-4 shadow-md max-w-md mx-auto">
       <div>
-        <Label htmlFor="file-upload" className="text-base font-semibold">
-          Choose a file to upload
+        <Label htmlFor="file-upload" className="text-base font-semibold text-white">
+          Choose file(s) to upload
         </Label>
         <Input
           id="file-upload"
           type="file"
+          multiple
           onChange={handleChange}
-          className="mt-2"
+          className="mt-2 text-white file:text-white"
+          style={{ color: "white" }}
         />
-        {file && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Selected: <span className="font-medium">{file.name}</span>
+        {files.length > 0 && (
+          <p className="text-sm text-muted-foreground mt-1 text-white">
+            Selected:{" "}
+            <span className="font-medium">
+              {files.map(f => f.name).join(", ")}
+            </span>
           </p>
         )}
       </div>
 
       <Button
         onClick={handleUpload}
-        disabled={!file || uploading}
-        className="w-full"
+        disabled={!files.length || uploading}
+        className="w-full bg-gradient-to-r from-[#444857] to-[#23272f] text-white"
       >
         {uploading ? (
           <>
@@ -74,5 +79,5 @@ export default function FileUpload({onUpload}:{onUpload?: () => void}){
         )}
       </Button>
     </div>
-    );
+  );
 }
