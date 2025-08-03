@@ -1,42 +1,111 @@
-import ChatUI from './components/ChatUI';
-import RegisterForm from './components/RegistrationForm';
-import GoogleSignIn from './components/GoogleSignIn';
+'use client';
 
-export default function Home() {
+import React, { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+
+export default function HomePage() {
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [loadingUpload, setLoadingUpload] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState(false);
+  const [form, setForm] = useState({
+    classLevel: '',
+    subject: '',
+    durationWeeks: '',
+    startDate: '',
+  });
+  const [output, setOutput] = useState<string | null>(null);
+
+  const handleUpload = async () => {
+    if (!pdfFile) return alert('Please select a PDF file');
+    setLoadingUpload(true);
+    const formData = new FormData();
+    formData.append('file', pdfFile);
+
+    const res = await fetch('/api/upload-textbook', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    setLoadingUpload(false);
+    alert(`✅ Textbook processed: ${data.chunks} chunks`);
+  };
+
+  const handleGenerate = async () => {
+    setLoadingPlan(true);
+    const res = await fetch('/api/generateCourse', {
+      method: 'POST',
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    setLoadingPlan(false);
+    setOutput(data.result);
+  };
+
   return (
-    <main className="p-6 min-h-screen bg-black flex flex-col justify-between">
-      <div>
-        <header className="mb-8">
-          <h1
-            className="text-9xl font-extrabold text-center text-white mb-4 drop-shadow-[0_0_2px_rgba(255,255,255,0.5)] animate-glow"
-            style={{
-              textShadow: "0 0 2px #fff, 0 0 2px #fff",
-            }}
-          >
-            Study with AI
-          </h1>
-          <h2 className="text-2xl text-center text-gray-400 animate-fade-in mb-15">
-            Study the smart way
-          </h2>
-        </header>
-        <div className="flex justify-center">
-          <div className="flex w-full max-w-4xl items-start">
-            <div className="w-1/2 animate-pop-in flex flex-col items-center justify-center pr-4">
-             <h2 className="text-2xl text-center text-gray-400 animate-fade-in mb-15">
-              Already have an account?
-            </h2>
-              <GoogleSignIn />
-            </div>
-            <div className="h-100 border-l border-gray-700 mx-8"></div>
-            <div className="w-1/2 animate-pop-in">
-              <RegisterForm />
-            </div>
-          </div>
-        </div>
-      </div>
-      <footer className="mt-12 text-center text-gray-600 text-sm opacity-70">
-        &copy; {new Date().getFullYear()} Study with AI. All rights reserved.
-      </footer>
-    </main>
+    <div className="max-w-2xl mx-auto p-4 space-y-8">
+      <h1 className="text-3xl font-bold text-center">📚 StudyMan Course Planner</h1>
+
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <Label htmlFor="file">Upload Textbook (PDF)</Label>
+          <Input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
+          <Button onClick={handleUpload} disabled={loadingUpload}>
+            {loadingUpload ? 'Uploading...' : 'Upload Textbook'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <Label>Class</Label>
+          <Input
+            type="text"
+            value={form.classLevel}
+            onChange={(e) => setForm({ ...form, classLevel: e.target.value })}
+            placeholder="e.g. 10"
+          />
+
+          <Label>Subject</Label>
+          <Input
+            type="text"
+            value={form.subject}
+            onChange={(e) => setForm({ ...form, subject: e.target.value })}
+            placeholder="e.g. Science"
+          />
+
+          <Label>Duration (weeks)</Label>
+          <Input
+            type="number"
+            value={form.durationWeeks}
+            onChange={(e) => setForm({ ...form, durationWeeks: e.target.value })}
+            placeholder="e.g. 6"
+          />
+
+          <Label>Start Date</Label>
+          <Input
+            type="date"
+            value={form.startDate}
+            onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+          />
+
+          <Button onClick={handleGenerate} disabled={loadingPlan}>
+            {loadingPlan ? 'Generating Plan...' : 'Generate Course Plan'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {output && (
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <h2 className="text-xl font-semibold">📅 Generated Course Plan</h2>
+            <Textarea className="h-[400px] whitespace-pre-wrap font-mono" value={output} readOnly />
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

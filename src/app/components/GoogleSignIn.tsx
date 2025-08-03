@@ -1,6 +1,7 @@
 'use client'
 
 export default function GoogleSignIn() {
+    
   // Placeholder for Google sign-in logic
   return (
     <button
