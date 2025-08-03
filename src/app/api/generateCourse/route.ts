@@ -6,7 +6,7 @@ export const config = {
 };
 
 export async function POST(req: Request) {
-  const { subject, classLevel, durationWeeks, startDate } = await req.json();
+  const { subject, classLevel, durationHours, startDate } = await req.json();
 
   const contextChunks = await getTopChunks(
     `Create a course plan for Class ${classLevel} ${subject}`,
@@ -21,7 +21,7 @@ Generate a course outline and 6-week plan using the textbook content and user in
 User Inputs:
 - Class: ${classLevel}
 - Subject: ${subject}
-- Duration: ${durationWeeks} weeks
+- Duration: ${durationHours} hours
 - Start Date: ${startDate}
 
 Textbook Content:

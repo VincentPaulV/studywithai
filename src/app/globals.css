@@ -120,3 +120,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+html.dark {
+  background-color: #0f0f0f;
+  color: white;
+}
+
+/* Optional: fine-tune typography */
+.prose strong {
+  font-weight: 700;
+}
+
+.prose code {
+  background-color: #f3f4f6;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
