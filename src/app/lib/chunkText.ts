@@ -3,7 +3,7 @@ export function chunkText(text, maxWords = 200) {
   const chunks = [];
   let chunk = [];
 
-  for (let word of words) {
+  for (const word of words) {
     chunk.push(word);
     if (chunk.length >= maxWords) {
       chunks.push(chunk.join(" "));

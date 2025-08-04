@@ -8,7 +8,7 @@ export async function getEmbeddings(texts) {
   }
 
   const results = [];
-  for (let text of texts) {
+  for (const text of texts) {
     const output = await embedder(text, { pooling: 'mean', normalize: true });
     results.push(Array.from(output.data));
   }

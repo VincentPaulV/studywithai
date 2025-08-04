@@ -6,10 +6,10 @@ export const config = {
 };
 
 export async function POST(req: Request) {
-  const { subject, classLevel, durationHours, startDate } = await req.json();
+  const { numberOfSessions,subject, durationHours, startDate, endDate } = await req.json();
 
   const contextChunks = await getTopChunks(
-    `Create a course plan for Class ${classLevel} ${subject}`,
+    `Create ${numberOfSessions} number of sessions in a course plan for ${subject}`,
     5
   );
 
@@ -19,10 +19,11 @@ You are an AI tutor.
 Generate a course outline and 6-week plan using the textbook content and user inputs.
 
 User Inputs:
-- Class: ${classLevel}
+- Number of Sessions: ${numberOfSessions}
 - Subject: ${subject}
 - Duration: ${durationHours} hours
 - Start Date: ${startDate}
+- End Date: ${endDate}
 
 Textbook Content:
 ${contextChunks.join("\n\n")}

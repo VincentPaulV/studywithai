@@ -4,23 +4,24 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+// import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { useTheme } from 'next-themes';
+// import { useTheme } from 'next-themes';
 import ReactMarkdown from 'react-markdown';
-import { ThemeToggle } from './components/ThemeToggle';
+// import { ThemeToggle } from './components/ThemeToggle';
 
 export default function HomePage() {
-  const { theme, setTheme } = useTheme();
+  // const { theme, setTheme } = useTheme();
 
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    classLevel: '',
+    numberOfSessions: '',
     subject: '',
     durationHours: '',
     startDate: '',
+    endDate: '',
   });
   const [output, setOutput] = useState<string | null>(null);
 
@@ -61,11 +62,11 @@ export default function HomePage() {
             onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
           />
 
-          <Label>Class</Label>
+          <Label>Number of Sessions</Label>
           <Input
-            value={form.classLevel}
-            onChange={(e) => setForm({ ...form, classLevel: e.target.value })}
-            placeholder="e.g. 10"
+            value={form.numberOfSessions}
+            onChange={(e) => setForm({ ...form, numberOfSessions: e.target.value })}
+            placeholder="e.g. 16"
           />
 
           <Label>Subject</Label>
@@ -88,6 +89,13 @@ export default function HomePage() {
             type="date"
             value={form.startDate}
             onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+          />
+
+          <Label>End Date</Label>
+          <Input
+            type="date"
+            value={form.endDate}
+            onChange={(e) => setForm({ ...form, endDate: e.target.value })}
           />
 
           <Button onClick={handleSubmit} disabled={loading}>
