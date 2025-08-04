@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import pdfParse from 'pdf-parse';
 import { getEmbeddings } from '@/app/lib/embedding';
 import { chunkText } from '@/app/lib/chunkText';
-import { ragChunks } from '@/app/lib/ragStore';
+import { writeFile } from 'fs/promises';
+import path from 'path';
 
 export const config = {
   runtime: 'nodejs',
@@ -20,18 +21,17 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const parsed = await pdfParse(buffer); // ✅ now correctly used
+    const parsed = await pdfParse(buffer);
     const chunks = chunkText(parsed.text || '');
-
     const embeddings = await getEmbeddings(chunks);
 
-    ragChunks.length = 0;
-    for (let i = 0; i < chunks.length; i++) {
-      ragChunks.push({
-        text: chunks[i],
-        embedding: embeddings[i],
-      });
-    }
+    const ragChunks = chunks.map((text, i) => ({
+      text,
+      embedding: embeddings[i],
+    }));
+
+    const filePath = path.join(process.cwd(), 'src', 'app', 'data', 'rag.json');
+    await writeFile(filePath, JSON.stringify(ragChunks, null, 2));
 
     return new Response(JSON.stringify({ message: 'Textbook processed', chunks: ragChunks.length }));
   } catch (err: any) {

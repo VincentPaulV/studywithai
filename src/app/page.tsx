@@ -4,31 +4,32 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-// import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-// import { useTheme } from 'next-themes';
 import ReactMarkdown from 'react-markdown';
-// import { ThemeToggle } from './components/ThemeToggle';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { TimePicker } from '@/components/ui/time-picker';
 
 export default function HomePage() {
-  // const { theme, setTheme } = useTheme();
-
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [availability, setAvailability] = useState<{ day: string; start: string; end: string }[]>([]);
   const [form, setForm] = useState({
     numberOfSessions: '',
     subject: '',
     durationHours: '',
-    startDate: '',
-    endDate: '',
+    email: '',
   });
   const [output, setOutput] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!pdfFile) return alert('Please select a PDF file');
-    setLoading(true);
+    if (!startDate || !endDate) return alert('Please select valid dates');
 
+    setLoading(true);
     const formData = new FormData();
     formData.append('file', pdfFile);
     const uploadRes = await fetch('/api/upload-textbook', {
@@ -40,63 +41,77 @@ export default function HomePage() {
 
     const planRes = await fetch('/api/generateCourse', {
       method: 'POST',
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, startDate, endDate, availability }),
     });
     const planData = await planRes.json();
     setOutput(planData.result);
     setLoading(false);
+
+    const calendarRes = await fetch('/api/send-ics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: form.email,
+        startDate,
+        endDate,
+        numberOfSessions: form.numberOfSessions,
+        durationHours: form.durationHours,
+        availability,
+        planText: planData.result,
+      }),
+    });
+    const calendarData = await calendarRes.json();
+    if (calendarData.success) alert('📩 .ics calendar file sent to your email!');
+    else alert('❌ Failed to send calendar file');
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">📚 StudyMan Course Planner</h1>
-      </div>
+      <h1 className="text-3xl font-bold">📚 StudyMan Course Planner</h1>
 
       <Card>
         <CardContent className="p-6 space-y-4">
           <Label>Upload Textbook (PDF)</Label>
-          <Input
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-          />
+          <Input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
 
           <Label>Number of Sessions</Label>
-          <Input
-            value={form.numberOfSessions}
-            onChange={(e) => setForm({ ...form, numberOfSessions: e.target.value })}
-            placeholder="e.g. 16"
-          />
+          <Input value={form.numberOfSessions} onChange={(e) => setForm({ ...form, numberOfSessions: e.target.value })} placeholder="e.g. 16" />
+
+          <Label>Session Duration (in hours)</Label>
+          <Input type="number" value={form.durationHours} onChange={(e) => setForm({ ...form, durationHours: e.target.value })} placeholder="e.g. 0.5" />
 
           <Label>Subject</Label>
-          <Input
-            value={form.subject}
-            onChange={(e) => setForm({ ...form, subject: e.target.value })}
-            placeholder="e.g. Science"
-          />
+          <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="e.g. Science" />
 
-          <Label>Duration (Hours)</Label>
-          <Input
-            type="number"
-            value={form.durationHours}
-            onChange={(e) => setForm({ ...form, durationHours: e.target.value })}
-            placeholder="e.g. 6"
-          />
+          <Label>Your Email (to send calendar)</Label>
+          <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="e.g. you@example.com" />
 
           <Label>Start Date</Label>
-          <Input
-            type="date"
-            value={form.startDate}
-            onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-start text-left">
+                {startDate ? format(startDate, 'PPP') : 'Pick a start date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
+            </PopoverContent>
+          </Popover>
 
           <Label>End Date</Label>
-          <Input
-            type="date"
-            value={form.endDate}
-            onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-start text-left">
+                {endDate ? format(endDate, 'PPP') : 'Pick an end date'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
+            </PopoverContent>
+          </Popover>
+
+          <Label>Availability Slots (e.g. Monday 5 PM - 6 PM)</Label>
+          <TimePicker onChange={(slots) => setAvailability(slots)} value={availability} />
 
           <Button onClick={handleSubmit} disabled={loading}>
             {loading ? 'Processing...' : 'Upload & Generate Plan'}

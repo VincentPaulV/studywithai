@@ -1,2 +1,6 @@
-// Temporary in-memory store
-export const ragChunks = []; // Will store { text, embedding } objects
+// lib/ragStore.ts
+export let ragChunks: { text: string; embedding: number[] }[] = [];
+
+export function setRagChunks(chunks: { text: string; embedding: number[] }[]) {
+  ragChunks = chunks;
+}

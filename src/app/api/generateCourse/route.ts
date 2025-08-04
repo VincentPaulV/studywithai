@@ -1,34 +1,51 @@
 import { getTopChunks } from '@/app/lib/ragSearch';
-import { NextRequest } from 'next/server';
 
 export const config = {
-  runtime: 'nodejs', // Use Node runtime instead of Edge
+  runtime: 'nodejs',
 };
 
 export async function POST(req: Request) {
-  const { numberOfSessions,subject, durationHours, startDate, endDate } = await req.json();
+  const { numberOfSessions, subject, durationHours, startDate, endDate, availability } = await req.json();
 
-  const contextChunks = await getTopChunks(
-    `Create ${numberOfSessions} number of sessions in a course plan for ${subject}`,
+  const topChunks = await getTopChunks(
+    `Generate a structured ${numberOfSessions}-session course plan for ${subject}`,
     5
   );
 
+  console.log("🔍 First chunk sample:\n", topChunks[0]);
+
   const prompt = `
-You are an AI tutor.
+You are an AI educational planner.
 
-Generate a course outline and 6-week plan using the textbook content and user inputs.
+The user has uploaded textbook material to generate a custom course plan.
 
-User Inputs:
-- Number of Sessions: ${numberOfSessions}
+## USER INPUTS:
 - Subject: ${subject}
-- Duration: ${durationHours} hours
+- Total Sessions: ${numberOfSessions}
+- Each Session Duration: ${durationHours} hours
 - Start Date: ${startDate}
 - End Date: ${endDate}
+- Weekly Availability: ${availability?.length > 0 ? JSON.stringify(availability) : "N/A"}
 
-Textbook Content:
-${contextChunks.join("\n\n")}
+## INSTRUCTIONS:
+1. Use the textbook content below to extract important concepts.
+2. Create exactly ${numberOfSessions} sessions, spaced logically based on content.
+3. **Each session must follow this format exactly** (for compatibility with automation):
 
-Give weekly breakdown with topics and checkpoints.
+## Session X: [Concise Title]
+
+- **Summary:** A short 2-3 line explanation of what the session covers.
+- **Key Concepts:** Bullet points of core topics/concepts covered.
+- **Checkpoint/Quiz Topics:** What the learner should review or be tested on after this session.
+
+4. Use chapters in logical order. If content is too short for one session, combine related topics logically.
+5. Avoid week numbers, vague time markers, or headings other than '## Session X: Title'.
+
+## TEXTBOOK CONTENT:
+${topChunks.join('\n\n')}
+
+Return only the list of sessions in the format above. No intro, no notes, no headings — only sessions.
+
 `;
 
   const gemmaResponse = await fetch("http://localhost:11434/api/generate", {
@@ -38,7 +55,6 @@ Give weekly breakdown with topics and checkpoints.
   });
 
   const result = await gemmaResponse.json();
+
   return Response.json({ result: result.response });
 }
-
-
