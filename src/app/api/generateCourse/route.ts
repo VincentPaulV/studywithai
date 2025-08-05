@@ -48,7 +48,7 @@ Return only the list of sessions in the format above. No intro, no notes, no hea
 
 `;
 
-  const gemmaResponse = await fetch("http://localhost:11434/api/generate", {
+  const gemmaResponse = await fetch("http://127.0.0.1:11434/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model: "gemma:latest", prompt, stream: false }),
