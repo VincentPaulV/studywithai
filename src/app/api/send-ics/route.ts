@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createEvents } from 'ics';
 import nodemailer from 'nodemailer';
 import { parseISO, eachDayOfInterval } from 'date-fns';
+import type { EventAttributes } from 'ics'; // add this at the top
 
 type AvailabilitySlot = {
   day: string;
@@ -84,13 +85,19 @@ export async function POST(req: NextRequest) {
         ] as [number, number, number, number, number];
 
         sessionEvents.push({
-          title: session.title,
-          description: session.description,
-          start: startDateArr,
-          duration: {
+        title: session.title,
+        description: session.description,
+        start: [
+            date.getFullYear(),
+            date.getMonth() + 1,
+            date.getDate(),
+            startHour,
+            startMinute,
+        ] as [number, number, number, number, number],
+        duration: {
             hours: Math.floor(durationMinutes / 60),
             minutes: durationMinutes % 60,
-          },
+        },
         });
       }
 
