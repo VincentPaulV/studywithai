@@ -1,4 +1,4 @@
-export function chunkText(text, maxWords = 200) {
+export function chunkText(text: string, maxWords = 200) {
   const words = text.split(/\s+/);
   const chunks = [];
   let chunk = [];

@@ -12,13 +12,14 @@ function cosineSimilarity(a: number[], b: number[]) {
 export async function getTopChunks(query: string, k = 5) {
   const filePath = path.join(process.cwd(), 'src', 'app', 'data', 'rag.json');
   const ragData = await fs.readFile(filePath, 'utf-8');
-  const ragChunks = JSON.parse(ragData) as { text: string; embedding: number[] }[];
+  const ragChunks = (JSON.parse(ragData) as Array<{ text: string; embedding: number[] }>);
 
-  const [queryEmbedding] = await getEmbeddings([query]);
+  const embeddings = await getEmbeddings([query]) as number[][];
+  const queryEmbedding = embeddings[0];
 
   const scored = ragChunks.map(chunk => ({
     text: chunk.text,
-    score: cosineSimilarity(queryEmbedding, chunk.embedding),
+    score: cosineSimilarity(queryEmbedding, chunk.embedding as number[]),
   }));
 
   return scored

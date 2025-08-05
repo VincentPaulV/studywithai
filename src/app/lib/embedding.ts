@@ -1,8 +1,8 @@
-import { pipeline } from '@xenova/transformers';
+import { FeatureExtractionPipeline, pipeline } from '@xenova/transformers';
 
-let embedder = null;
+let embedder: FeatureExtractionPipeline | ((arg0: any, arg1: { pooling: string; normalize: boolean; }) => any) | null = null;
 
-export async function getEmbeddings(texts) {
+export async function getEmbeddings(texts: string[]) {
   if (!embedder) {
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
   }

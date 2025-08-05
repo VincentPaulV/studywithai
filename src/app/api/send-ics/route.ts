@@ -1,9 +1,9 @@
 // pages/api/send-ics.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createEvents } from 'ics';
+import type { EventAttributes } from 'ics';
 import nodemailer from 'nodemailer';
 import { parseISO, eachDayOfInterval } from 'date-fns';
-import type { EventAttributes } from 'ics'; // add this at the top
 
 type AvailabilitySlot = {
   day: string;
@@ -53,12 +53,8 @@ export async function POST(req: NextRequest) {
 
     const allDates = eachDayOfInterval({ start: parsedStart, end: parsedEnd });
 
-    const sessionEvents: {
-      title: string;
-      description: string;
-      start: number[];
-      duration: { hours: number; minutes: number };
-    }[] = [];
+
+    const sessionEvents: EventAttributes[] = [];
 
     let sessionIndex = 0;
 
@@ -85,23 +81,21 @@ export async function POST(req: NextRequest) {
         ] as [number, number, number, number, number];
 
         sessionEvents.push({
-        title: session.title,
-        description: session.description,
-        start: [
+          title: session.title,
+          description: session.description,
+          start: [
             date.getFullYear(),
             date.getMonth() + 1,
             date.getDate(),
             startHour,
             startMinute,
-        ] as [number, number, number, number, number],
-        duration: {
+          ] as [number, number, number, number, number],
+          duration: {
             hours: Math.floor(durationMinutes / 60),
             minutes: durationMinutes % 60,
-        },
+          },
         });
       }
-
-      if (sessionIndex >= sessions.length) break;
     }
 
     const { error, value } = createEvents(sessionEvents);
