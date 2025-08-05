@@ -39,16 +39,28 @@ export async function POST(req: NextRequest) {
     const parsedStart = parseISO(startDate);
     const parsedEnd = parseISO(endDate);
 
-    const sessions: Session[] = [
-      ...planText.matchAll(/## Session \d+:\s*(.*?)\n([\s\S]*?)(?=(?:\n## Session|\n*$))/g),
-    ].map(([, title, desc]) => ({
-      title: title.trim(),
-      description: desc.trim(),
-    }));
+    const sessionRegexes = [
+    /## Session \d+:\s*(.*?)\n([\s\S]*?)(?=(?:\n## Session|\n*$))/g,            // Ideal markdown
+    /\|\s*Session\s+\w+:\s*(.*?)\s*\|([\s\S]*?)(?=\|\s*Session|\n*$)/g,         // Fallback | Session X: |
+    /(?:Session\s+\d+:)\s*(.*?)\n([\s\S]*?)(?=(?:\nSession\s+\d+:|\n*$))/g      // Plain text fallback
+    ];
+
+    let sessions: Session[] = [];
+
+    for (const regex of sessionRegexes) {
+    const matches = [...planText.matchAll(regex)];
+    if (matches.length > 0) {
+        sessions = matches.map(([, title, desc]) => ({
+        title: title.trim(),
+        description: desc.trim(),
+        }));
+        break; // Use first matching format only
+    }
+    }
 
     if (sessions.length === 0) {
-      console.error('❌ No sessions found in planText:', planText);
-      return NextResponse.json({ success: false, error: 'No sessions found in plan text' });
+    console.error('❌ No sessions found in planText:', planText);
+    return NextResponse.json({ success: false, error: 'No sessions found in plan text' });
     }
 
     const allDates = eachDayOfInterval({ start: parsedStart, end: parsedEnd });
