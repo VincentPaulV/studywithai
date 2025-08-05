@@ -1,16 +1,18 @@
 import { FeatureExtractionPipeline, pipeline } from '@xenova/transformers';
 
-let embedder: FeatureExtractionPipeline | ((arg0: any, arg1: { pooling: string; normalize: boolean; }) => any) | null = null;
+let embedder: FeatureExtractionPipeline | null = null;
 
-export async function getEmbeddings(texts: string[]) {
+export async function getEmbeddings(texts: string[]): Promise<number[][]> {
   if (!embedder) {
-    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2') as FeatureExtractionPipeline;
   }
 
-  const results = [];
+  const results: number[][] = [];
+
   for (const text of texts) {
     const output = await embedder(text, { pooling: 'mean', normalize: true });
-    results.push(Array.from(output.data));
+    results.push(Array.from(output.data as Float32Array));
   }
+
   return results;
 }
