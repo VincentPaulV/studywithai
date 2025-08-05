@@ -76,12 +76,12 @@ export async function POST(req: NextRequest) {
 
         const session = sessions[sessionIndex++];
         const startDateArr = [
-          date.getFullYear(),
-          date.getMonth() + 1,
-          date.getDate(),
-          startHour,
-          startMinute,
-        ];
+        date.getFullYear(),
+        date.getMonth() + 1,
+        date.getDate(),
+        startHour,
+        startMinute,
+        ] as [number, number, number, number, number];
 
         sessionEvents.push({
           title: session.title,
