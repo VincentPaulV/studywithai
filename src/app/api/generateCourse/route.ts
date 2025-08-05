@@ -40,7 +40,7 @@ The user has uploaded textbook material to generate a custom course plan.
 
 4. Use chapters in logical order. If content is too short for one session, combine related topics logically.
 5. Avoid week numbers, vague time markers, or headings other than '## Session X: Title'.
-6. Do not use tables, Markdown formatting, or alternate layouts. Follow the plain-text format exactly.
+6. Do not use tables or markdown formatting like "| Session | Summary |". This will break automation.
 
 ## Example Output:
 ## Session 1: Linear Regression

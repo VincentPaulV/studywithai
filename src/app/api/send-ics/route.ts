@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
     const sessionRegexes = [
     /## Session \d+:\s*(.*?)\n([\s\S]*?)(?=(?:\n## Session|\n*$))/g,            // Ideal markdown
     /\|\s*Session\s+\w+:\s*(.*?)\s*\|([\s\S]*?)(?=\|\s*Session|\n*$)/g,         // Fallback | Session X: |
-    /(?:Session\s+\d+:)\s*(.*?)\n([\s\S]*?)(?=(?:\nSession\s+\d+:|\n*$))/g      // Plain text fallback
+    /(?:Session\s+\d+:)\s*(.*?)\n([\s\S]*?)(?=(?:\nSession\s+\d+:|\n*$))/g,
+    /\|\s*Session\s*(\d+)\s*\|\s*(.*?)\s*\|/g      // Plain text fallback
     ];
 
     let sessions: Session[] = [];
@@ -50,11 +51,14 @@ export async function POST(req: NextRequest) {
     for (const regex of sessionRegexes) {
     const matches = [...planText.matchAll(regex)];
     if (matches.length > 0) {
-        sessions = matches.map(([, title, desc]) => ({
-        title: title.trim(),
-        description: desc.trim(),
-        }));
-        break; // Use first matching format only
+        sessions.push(
+        ...matches.map((match) => {
+            const title = match[2]?.trim() || match[1]?.trim(); // works for different group positions
+            const description = `- **Summary:** ${title}`; // Fabricate description since markdown table lacks it
+            return { title, description };
+        })
+        );
+        break;
     }
     }
 
