@@ -30,7 +30,7 @@ The user has uploaded textbook material to generate a custom course plan.
 ## INSTRUCTIONS:
 1. Use the textbook content below to extract important concepts.
 2. Create exactly ${numberOfSessions} sessions, spaced logically based on content.
-3. **Each session must follow this format exactly** (for compatibility with automation):
+3. Each session must follow this format exactly (for compatibility with automation):
 
 ## Session X: [Concise Title]
 
@@ -40,6 +40,18 @@ The user has uploaded textbook material to generate a custom course plan.
 
 4. Use chapters in logical order. If content is too short for one session, combine related topics logically.
 5. Avoid week numbers, vague time markers, or headings other than '## Session X: Title'.
+6. Do not use tables, Markdown formatting, or alternate layouts. Follow the plain-text format exactly.
+
+## Example Output:
+## Session 1: Linear Regression
+- **Summary:** Introduction to linear regression and how it models relationships using least squares.
+- **Key Concepts:**
+  - Linear equations
+  - Matrix derivatives
+  - Least squares method
+- **Checkpoint/Quiz Topics:**
+  - Deriving gradients
+  - Interpreting coefficients
 
 ## TEXTBOOK CONTENT:
 ${topChunks.join('\n\n')}
