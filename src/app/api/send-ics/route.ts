@@ -2,7 +2,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createEvents } from 'ics';
 import nodemailer from 'nodemailer';
-import { parseISO, eachDayOfInterval, isWithinInterval } from 'date-fns';
+import { parseISO, eachDayOfInterval } from 'date-fns';
+
+type AvailabilitySlot = {
+  day: string;
+  start: string; // e.g., "09:00"
+};
+
+type Session = {
+  title: string;
+  description: string;
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,13 +38,12 @@ export async function POST(req: NextRequest) {
     const parsedStart = parseISO(startDate);
     const parsedEnd = parseISO(endDate);
 
-    const sessions = [...planText.matchAll(/## Session \d+:\s*(.*?)\n([\s\S]*?)(?=(?:\n## Session|\n*$))/g)].map(
-    ([_, title, desc]) => ({
-        title: title.trim(),
-        description: desc.trim(),
-    })
-    );
-
+    const sessions: Session[] = [
+      ...planText.matchAll(/## Session \d+:\s*(.*?)\n([\s\S]*?)(?=(?:\n## Session|\n*$))/g),
+    ].map(([, title, desc]) => ({
+      title: title.trim(),
+      description: desc.trim(),
+    }));
 
     if (sessions.length === 0) {
       console.error('❌ No sessions found in planText:', planText);
@@ -43,21 +52,27 @@ export async function POST(req: NextRequest) {
 
     const allDates = eachDayOfInterval({ start: parsedStart, end: parsedEnd });
 
-    let sessionEvents: any[] = [];
+    const sessionEvents: {
+      title: string;
+      description: string;
+      start: number[];
+      duration: { hours: number; minutes: number };
+    }[] = [];
+
     let sessionIndex = 0;
 
     for (const date of allDates) {
       const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
 
-      const availableSlots = availability.filter((slot) => slot.day === dayName);
+      const availableSlots = (availability as AvailabilitySlot[]).filter(
+        (slot) => slot.day === dayName
+      );
 
       for (const slot of availableSlots) {
         if (sessionIndex >= sessions.length) break;
 
         const [startHour, startMinute] = slot.start.split(':').map(Number);
         const durationMinutes = Number(durationHours) * 60;
-        const endHour = startHour + Math.floor((startMinute + durationMinutes) / 60);
-        const endMinute = (startMinute + durationMinutes) % 60;
 
         const session = sessions[sessionIndex++];
         const startDateArr = [
@@ -108,8 +123,11 @@ export async function POST(req: NextRequest) {
     console.log('✅ Email sent:', info.response);
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error('❌ Email or API error:', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: (err as Error).message || 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
