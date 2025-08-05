@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     /\|\s*Session\s*(\d+)\s*\|\s*(.*?)\s*\|/g      // Plain text fallback
     ];
 
-    let sessions: Session[] = [];
+    const sessions: Session[] = [];
 
     for (const regex of sessionRegexes) {
     const matches = [...planText.matchAll(regex)];
